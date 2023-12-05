@@ -30,7 +30,7 @@ _________                  .__    .__  ___________           _________          
    if (file("$projectDir/Reads/*.{fq,fastq,fq.gz,fastq.gz}")) {
   
   // INPUT Parameters
-        params.reads = "$projectDir/Reads/*{1,2}.{fq,fastq,fq.gz,fastq.gz}"
+        params.reads = "$projectDir/Reads/*.{fq,fastq,fq.gz,fastq.gz}"
      } 
 
  // ERROR Message     
@@ -45,11 +45,8 @@ log.info """\
            *** QUALITY CONTROL CHECK *** 
 ======================================================
 reads           :${params.reads}  
-Trimmed reads   :${params.outdir}/Trimmed_reads
 Raw Qual Ctrl   :${params.outdir}/Reads_QC/RAW/  
 Multiqc Raw     :${params.outdir}/Reads_QC/RAW/multiqc/
-Trim Qual Ctrl  :${params.outdir}/Reads_QC/Trimmed/ 
-Multiqc Trimmed :${params.outdir}/Reads_QC/Trimmed/multiqc/
     """
     .stripIndent()    
  
@@ -62,15 +59,15 @@ process QC_RAW {
         publishDir "${params.outdir}/Reads_QC/RAW" ,  mode:'copy'
         
         input:
-             tuple val(sample_id), path(reads) 
+             path(reads) 
 
         output:
-             file "*.{zip,html}"  
+             path "*.{html,zip}"  
 
         script:
         
         """
-        fastqc  ${reads} 
+        fastqc ${reads} 
         """
 }
 
@@ -82,66 +79,11 @@ process Multiqc_Raw {
             path (fastqc)  
             
         output:
-           path "{multiqc_data,multiqc_report.html}" 
+            path "{multiqc_data,multiqc_report.html}" 
            
         script:
         """
-        multiqc ${fastqc} .
-        """
-}
-
-/*
- * Trimming using fastq ;
- */
- 
-process Trimming {
-        publishDir "${params.outdir}/Trimmed_reads", mode: 'copy'
-        
-        input:
-             tuple val(name), path(reads)
-        output:
-             path (reads) 
-        
-        script:
-        
-        """        
-        fastp -i ${reads[0]} -I ${reads[1]} -o ${reads[0].baseName}.gz -O ${reads[1].baseName}.gz
-        """
-}
- 
-/*
- * Trimmed reads quality control ;
- */
- 
-process QC_Trimmed {
-        publishDir "${params.outdir}/Reads_QC/Trimmed" ,  mode:'copy'
-      
-        input:
-             path (reads)  
-        
-        output:
-             file "*.{zip,html}"  
-             
-        script:
-        
-        """
-        fastqc ${reads} 
-        """
-}
-
-
-process Multiqc_Trim {
-        publishDir "${params.outdir}/Reads_QC/Trimmed/multiqc/" ,  mode:'copy'
-        
-        input:
-            path (fastqc)  
-            
-        output:
-           path "{multiqc_data,multiqc_report.html}" 
-           
-        script:
-        """
-        multiqc ${fastqc} .
+        multiqc .
         """
 }
 
@@ -150,31 +92,19 @@ process Multiqc_Trim {
  * Channels ;
  */
 
-Channel.fromFilePairs(params.reads, checkIfExists: true)
-       .set { reads_pairs_channels }   
+Channel.fromPath(params.reads, checkIfExists: true)
+       .set { reads_ch }   
   
     
-workflow {
-   
-    QC_RAW(reads_pairs_channels)   
+workflow{
+    QC_RAW(reads_ch)   
     Multiqc_Raw(QC_RAW.out.collect())
-    Trimming(reads_pairs_channels)
-    QC_Trimmed(Trimming.out.collect())
-    Multiqc_Trim(QC_Trimmed.out.collect())
-
+  
 }
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
+ 
+workflow.onComplete {
+    println "Pipeline completed at: $workflow.complete"
+    println "Execution status: ${ workflow.success ? 'OK' : 'failed' }"
+}
+
+
