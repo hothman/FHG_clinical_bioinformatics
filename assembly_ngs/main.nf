@@ -1,6 +1,6 @@
 #!/usr/bin/env nextflow
 
-nextflow.enable.dsl = 2
+//nextflow.enable.dsl = 2
 
 String extractPathWithoutFilename(String filePath) {
     def file = new File(filePath)
@@ -9,7 +9,7 @@ String extractPathWithoutFilename(String filePath) {
 }
 
 params.samplesFile = './data/samplesheet.csv'
-params.referenceGenome = './ref_genome/dpyd.fa'
+params.referenceGenome = '/media/houcem/theDrum/BILIM/github/FHG_clinical_bioinformatics/assembly_ngs/ref_genome/dpyd.fa'
 params.indexing = true
 
 params.referenceGenomeRoot = extractPathWithoutFilename(params.referenceGenome)
@@ -47,21 +47,28 @@ process createIndex {
 }
 
 
+process alignReadsToRef {
+    input: 
+        tuple val(patient_id), file(read1), file(read2)
+
+    script: 
+    """
+    bwa mem  ${params.referenceGenome} $read1 $read2  | samtools view -Sb - > ${patient_id}_unsorted.bam
+    """
+
+}
+
 // Run the pipeline
 workflow {
-     Channel.fromPath(params.samplesFile) | splitCsv(header:true) | \
-     map { row-> tuple(row.patient_id, file(row.R1), file(row.R2)) } | \
-     processFastq
+
 
     if (params.indexing == true) { 
         Channel.fromPath(params.referenceGenome) | createIndex
         println "Creating index for reference genome!"
     }
-
-
-
-
-     
+     Channel.fromPath(params.samplesFile) | splitCsv(header:true) | \
+     map { row-> tuple(row.patient_id, file(row.R1), file(row.R2)) } | \
+     alignReadsToRef
 
 }
 
