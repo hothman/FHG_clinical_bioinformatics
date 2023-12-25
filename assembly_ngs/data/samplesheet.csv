@@ -1,0 +1,2 @@
+patient_id,R1,R2
+patient1,./data/sample1_r1.fq.gz,./data/sample1_r2.fq.gz
