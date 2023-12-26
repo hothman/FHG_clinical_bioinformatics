@@ -9,7 +9,7 @@ String extractPathWithoutFilename(String filePath) {
 }
 
 params.samplesFile = './data/samplesheet.csv'
-params.referenceGenome = '/media/houcem/theDrum/BILIM/github/FHG_clinical_bioinformatics/assembly_ngs/ref_genome/dpyd.fa'
+params.referenceGenome = '/home/hothman/github/FHG_clinical_bioinformatics/assembly_ngs/ref_genome/dpyd.fa'
 params.indexing = true
 params.cpus=2
 
@@ -40,7 +40,7 @@ process createIndex {
        file(genome) 
 
     output:
-       file("*") 
+       val("indexing complete"), emit: indexing_control 
 
     script:
     """
@@ -58,9 +58,9 @@ process alignReadsToRef {
     script: 
     """
     bwa-mem2 mem  ${params.referenceGenome} $read1 $read2 -t $params.cpus \\
-                  | samtools view -Sb -@ 2 -o ${patient_id}_unsorted.bam  -
+    | samtools view -Sb -@ 2 | samtools sort -o ${patient_id}_sorted.sam
+    
     """
-
 }
 
 // Run the pipeline
@@ -70,15 +70,16 @@ workflow {
         map { row-> tuple(row.patient_id, file(row.R1), file(row.R2)) } 
 
     // create index and align to reference 
-    if (params.indexing == true) { 
-        Channel.fromPath(params.referenceGenome) | createIndex
-       alignReadsToRef(sample)
+    if (params.indexing == true) {
+        ref_gen_channel = Channel.fromPath(params.referenceGenome)
+        createIndex( ref_gen_channel)
+        alignReadsToRef(sample)
+        
     }
 
     else {
        alignReadsToRef(sample)
     }
-
 
 }
 
