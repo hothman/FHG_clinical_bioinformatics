@@ -9,7 +9,7 @@ String extractPathWithoutFilename(String filePath) {
 }
 
 params.samplesFile = './data/samplesheet.csv'
-params.referenceGenome = '/home/hothman/github/FHG_clinical_bioinformatics/assembly_ngs/ref_genome/dpyd.fa'
+params.referenceGenome = '/media/houcem/theDrum/BILIM/github/FHG_clinical_bioinformatics/assembly_ngs/ref_genome/dpyd.fa'
 params.indexing = true
 params.cpus=2
 
@@ -55,12 +55,35 @@ process alignReadsToRef {
     input: 
         tuple val(patient_id), file(read1), file(read2)
 
+    output: 
+        file("*_sorted.bam")
+        val(patient_id)
+
     script: 
     """
     bwa-mem2 mem  ${params.referenceGenome} $read1 $read2 -t $params.cpus \\
-    | samtools view -Sb -@ 2 | samtools sort -o ${patient_id}_sorted.sam
+    | samtools view -Sb -@ 2 | samtools sort -o ${patient_id}_sorted.bam
     
     """
+}
+
+process markDuplicates {
+    conda "bioconda::gatk4=4.4"
+    tag "MARK DUPLICATES"
+
+    input: 
+        file(sorted_bam)
+        val(sample_id)
+
+
+    script:
+    """
+    gatk MarkDuplicates --INPUT $sorted_bam \\
+                        --OUTPUT ${sample_id}_sorted_markduplicates.sam \\
+                        --METRICS_FILE ${sample_id}.metrict \\
+                        --TMP_DIR .
+    """       
+
 }
 
 // Run the pipeline
@@ -73,12 +96,14 @@ workflow {
     if (params.indexing == true) {
         ref_gen_channel = Channel.fromPath(params.referenceGenome)
         createIndex( ref_gen_channel)
-        alignReadsToRef(sample)
+        alignReadsToRef(sample) | markDuplicates
+
         
     }
 
     else {
        alignReadsToRef(sample)
+
     }
 
 }
