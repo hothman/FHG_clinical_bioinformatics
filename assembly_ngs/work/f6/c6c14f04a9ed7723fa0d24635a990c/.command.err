@@ -1,0 +1,3 @@
+Using GATK jar /media/houcem/theDrum/modules/miniconda3/envs/nextflow=23.04/share/gatk4-4.4.0.0-0/gatk-package-4.4.0.0-local.jar
+Running:
+    java -Dsamjdk.use_async_io_read_samtools=false -Dsamjdk.use_async_io_write_samtools=true -Dsamjdk.use_async_io_write_tribble=false -Dsamjdk.compression_level=2 -jar /media/houcem/theDrum/modules/miniconda3/envs/nextflow=23.04/share/gatk4-4.4.0.0-0/gatk-package-4.4.0.0-local.jar --help

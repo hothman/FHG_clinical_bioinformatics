@@ -34,17 +34,21 @@ process processFastq {
 
 process createIndex {
     conda 'bioconda::bwa-mem2=0.7.17'
-    tag "CREATING INDEX FILES FOR REF GENOME"
+    conda "bioconda::gatk4=4.4"
+    tag "CREATING INDEX AND DICT FILES FOR REF GENOME"
     publishDir params.referenceGenomeRoot, mode: 'copy', overwrite: false
     input:
        file(genome) 
 
     output:
-       val("indexing complete"), emit: indexing_control 
+       val("indexing complete"), emit: indexing_control
+       file("*.dict")
 
     script:
     """
     bwa-mem2 index ${genome}
+    gatk CreateSequenceDictionary REFERENCE=${genome} \\
+                                  OUTPUT=${genome}.dict
     """
 }
 
@@ -62,9 +66,31 @@ process alignReadsToRef {
     script: 
     """
     bwa-mem2 mem  ${params.referenceGenome} $read1 $read2 -t $params.cpus \\
-    | samtools view -Sb -@ 2 | samtools sort -o ${patient_id}_sorted.bam
-    
+                         | samtools view -Sb -@ 2 | samtools sort -o ${patient_id}_sorted.bam
     """
+}
+
+process assignReadGroup {
+    conda "bioconda::picard=3.1.1"
+    tag "ASSIGNING RG"
+    input:
+        file(aligned_bam)
+        val(patient_id)
+
+    script: 
+    """
+    picard AddOrReplaceReadGroups I=$aligned_bam \\
+                 O=${patient_id}_sorted_labeled.bam \\ 
+                 RGID=$patient_id \\
+                 RGPL=ILLUMINA \\     #plateform
+                 RGLB=unspec \\       #lib id
+                 RGPU=unspec \\       #plateform unit 
+                 RGSM=20 \\           #read group sample name
+                 RGPM=unspec \\       #plateform model
+                 RGDT=unspec  \\      #run date
+                 RGCN=unspec          #sequecing center
+    """
+
 }
 
 process markDuplicates {
@@ -74,7 +100,6 @@ process markDuplicates {
     input: 
         file(sorted_bam)
         val(sample_id)
-
 
     script:
     """

@@ -1,0 +1,92 @@
+Looking to launch executable "/media/houcem/theDrum/modules/miniconda3/envs/nextflow=23.04/bin/bwa-mem2.avx2", simd = .avx2
+Launching executable "/media/houcem/theDrum/modules/miniconda3/envs/nextflow=23.04/bin/bwa-mem2.avx2"
+-----------------------------
+Executing in AVX2 mode!!
+-----------------------------
+* SA compression enabled with xfactor: 8
+* Ref file: /media/houcem/theDrum/BILIM/github/FHG_clinical_bioinformatics/assembly_ngs/ref_genome/dpyd.fa
+* Entering FMI_search
+* Index file found. Loading index from /media/houcem/theDrum/BILIM/github/FHG_clinical_bioinformatics/assembly_ngs/ref_genome/dpyd.fa.bwt.2bit.64
+* Reference seq len for bi-index = 1700635
+* sentinel-index: 1148050
+* Count:
+0,	1
+1,	551677
+2,	850318
+3,	1148959
+4,	1700635
+
+* Reading other elements of the index from files /media/houcem/theDrum/BILIM/github/FHG_clinical_bioinformatics/assembly_ngs/ref_genome/dpyd.fa
+* Index prefix: /media/houcem/theDrum/BILIM/github/FHG_clinical_bioinformatics/assembly_ngs/ref_genome/dpyd.fa
+* Read 0 ALT contigs
+* Done reading Index!!
+* Reading reference genome..
+* Binary seq file = /media/houcem/theDrum/BILIM/github/FHG_clinical_bioinformatics/assembly_ngs/ref_genome/dpyd.fa.0123
+* Reference genome size: 1700634 bp
+* Done reading reference genome !!
+
+------------------------------------------
+1. Memory pre-allocation for Chaining: 278.6958 MB
+2. Memory pre-allocation for BSW: 479.2340 MB
+3. Memory pre-allocation for BWT: 154.6284 MB
+------------------------------------------
+* Threads used (compute): 2
+* No. of pipeline threads: 2
+
+[0000] read_chunk: 20000000, work_chunk_size: 14000000, nseq: 200000
+	[0000][ M::kt_pipeline] read 200000 sequences (14000000 bp)...
+[0000] Reallocating initial memory allocations!!
+[0000] Calling mem_process_seqs.., task: 0
+[0000] read_chunk: 20000000, work_chunk_size: 0, nseq: 0
+[0000] 1. Calling kt_for - worker_bwt
+[0000] 2. Calling kt_for - worker_aln
+[0000] Inferring insert size distribution of PE reads from data, l_pac: 850317, n: 200000
+[0000][PE] # candidate unique pairs for (FF, FR, RF, RR): (0, 96337, 0, 0)
+[0000][PE] skip orientation FF as there are not enough pairs
+[0000][PE] analyzing insert size distribution for orientation FR...
+[0000][PE] (25, 50, 75) percentile: (465, 499, 533)
+[0000][PE] low and high boundaries for computing mean and std.dev: (329, 669)
+[0000][PE] mean and std.dev: (498.91, 49.91)
+[0000][PE] low and high boundaries for proper pairs: (261, 737)
+[0000][PE] skip orientation RF as there are not enough pairs
+[0000][PE] skip orientation RR as there are not enough pairs
+[0000] 3. Calling kt_for - worker_sam
+	[0000][ M::mem_process_seqs] Processed 200000 reads in 4.266 CPU sec, 2.142 real sec
+[0000] read_chunk: 20000000, work_chunk_size: 0, nseq: 0
+[0000] Computation ends..
+No. of OMP threads: 2
+Processor is running @2496.209952 MHz
+Runtime profile:
+
+	Time taken for main_mem function: 3.14 sec
+
+	IO times (sec) :
+	Reading IO time (reads) avg: 0.35, (0.35, 0.35)
+	Writing IO time (SAM) avg: 0.32, (0.32, 0.32)
+	Reading IO time (Reference Genome) avg: 0.10, (0.10, 0.10)
+	Index read time avg: 0.21, (0.21, 0.21)
+
+	Overall time (sec) (Excluding Index reading time):
+	PROCESS() (Total compute time + (read + SAM) IO time) : 2.83
+	MEM_PROCESS_SEQ() (Total compute time (Kernel + SAM)), avg: 2.14, (2.14, 2.14)
+
+	 SAM Processing time (sec):
+	--WORKER_SAM avg: 0.71, (0.71, 0.71)
+
+	Kernels' compute time (sec):
+	Total kernel (smem+sal+bsw) time avg: 1.43, (1.43, 1.43)
+		SMEM compute avg: 0.95, (0.95, 0.95)
+		SAL compute avg: 0.16, (0.17, 0.16)
+				MEM_SA avg: 0.09, (0.09, 0.09)
+
+		BSW time, avg: 0.28, (0.28, 0.28)
+
+Important parameter settings: 
+	BATCH_SIZE: 512
+	MAX_SEQ_LEN_REF: 256
+	MAX_SEQ_LEN_QER: 128
+	MAX_SEQ_LEN8: 128
+	SEEDS_PER_READ: 500
+	SIMD_WIDTH8 X: 32
+	SIMD_WIDTH16 X: 16
+	AVG_SEEDS_PER_READ: 64

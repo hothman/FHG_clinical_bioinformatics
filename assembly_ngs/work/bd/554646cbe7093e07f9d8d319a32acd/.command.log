@@ -1,0 +1,26 @@
+[M::bwa_idx_load_from_disk] read 0 ALT contigs
+[M::process] read 142858 sequences (10000060 bp)...
+[M::process] read 57142 sequences (3999940 bp)...
+[M::mem_pestat] # candidate unique pairs for (FF, FR, RF, RR): (0, 68826, 0, 0)
+[M::mem_pestat] skip orientation FF as there are not enough pairs
+[M::mem_pestat] analyzing insert size distribution for orientation FR...
+[M::mem_pestat] (25, 50, 75) percentile: (465, 499, 533)
+[M::mem_pestat] low and high boundaries for computing mean and std.dev: (329, 669)
+[M::mem_pestat] mean and std.dev: (498.84, 49.73)
+[M::mem_pestat] low and high boundaries for proper pairs: (261, 737)
+[M::mem_pestat] skip orientation RF as there are not enough pairs
+[M::mem_pestat] skip orientation RR as there are not enough pairs
+[M::mem_process_seqs] Processed 142858 reads in 4.432 CPU sec, 4.381 real sec
+[M::mem_pestat] # candidate unique pairs for (FF, FR, RF, RR): (0, 27511, 0, 0)
+[M::mem_pestat] skip orientation FF as there are not enough pairs
+[M::mem_pestat] analyzing insert size distribution for orientation FR...
+[M::mem_pestat] (25, 50, 75) percentile: (465, 499, 533)
+[M::mem_pestat] low and high boundaries for computing mean and std.dev: (329, 669)
+[M::mem_pestat] mean and std.dev: (499.10, 50.37)
+[M::mem_pestat] low and high boundaries for proper pairs: (261, 737)
+[M::mem_pestat] skip orientation RF as there are not enough pairs
+[M::mem_pestat] skip orientation RR as there are not enough pairs
+[M::mem_process_seqs] Processed 57142 reads in 1.829 CPU sec, 1.775 real sec
+[main] Version: 0.7.17-r1188
+[main] CMD: bwa mem /media/houcem/theDrum/BILIM/github/FHG_clinical_bioinformatics/assembly_ngs/ref_genome/dpyd.fa sample1_r1.fq.gz sample1_r2.fq.gz
+[main] Real time: 6.815 sec; CPU: 6.415 sec

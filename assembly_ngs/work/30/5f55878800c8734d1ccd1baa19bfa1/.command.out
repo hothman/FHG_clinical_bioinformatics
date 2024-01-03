@@ -1,0 +1,6 @@
+ref_seq_len = 1700634
+count = 0, 551676, 850317, 1148958, 1700634
+BWT[1148050] = 4
+CP_SHIFT = 6, CP_MASK = 63
+sizeof CP_OCC = 64
+max_occ_ind = 26572

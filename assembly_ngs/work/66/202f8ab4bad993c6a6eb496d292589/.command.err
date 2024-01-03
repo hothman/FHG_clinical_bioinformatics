@@ -1,0 +1,11 @@
+Looking to launch executable "/media/houcem/theDrum/modules/miniconda3/envs/nextflow=23.04/bin/bwa-mem2.avx2", simd = .avx2
+Launching executable "/media/houcem/theDrum/modules/miniconda3/envs/nextflow=23.04/bin/bwa-mem2.avx2"
+[bwa_index] Pack FASTA... 0.01 sec
+* Entering FMI_search
+init ticks = 61575050
+ref seq len = 1700634
+binary seq ticks = 31570646
+build suffix-array ticks = 309776534
+pos: 212580, ref_seq_len__: 212579
+build fm-index ticks = 68866600
+Total time taken: 0.2957

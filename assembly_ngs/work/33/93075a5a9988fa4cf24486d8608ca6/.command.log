@@ -1,0 +1,3 @@
+index file not found
+[E::fai_build3_core] Failed to open the file dpyd
+[faidx] Could not build fai index ./ref_genome/dpyd.fa/dpyd.fai
