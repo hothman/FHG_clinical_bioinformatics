@@ -35,7 +35,7 @@ process createIndex {
         
     script:
         """
-        bwa index ${ref} ${params.outdir}/BWA/BWAIndex
+        bwa index ${ref} ${params.outdir}
         gatk CreateSequenceDictionary REFERENCE=${ref} \\
                                   OUTPUT=${ref}.dict
         """
