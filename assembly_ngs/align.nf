@@ -35,7 +35,7 @@ process createIndex {
         
     script:
         """
-        bwa index ${ref} ${params.outdir}
+        bwa-mem2 index ${ref} ${params.outdir}
         gatk CreateSequenceDictionary REFERENCE=${ref} \\
                                   OUTPUT=${ref}.dict
         """
@@ -43,7 +43,7 @@ process createIndex {
 
 // Alignment based-reference
 
-
+params.cpus = 2 // if would change <=run=> Nextflow file --cpus x //
 process alignReadsToRef {
     conda "bioconda::bwa-mem2=2.2.1 bioconda::samtools=1.19"
     tag "ALIGNING GENOMES TO REFERENCE"
@@ -60,7 +60,7 @@ process alignReadsToRef {
 
     script:
         """
-        bwa mem -t ${task.cpus} -M ${refGenome} ${read1} ${read2} \\
+        bwa-mem2 mem -t {params.cpus} -M ${refGenome} ${read1} ${read2} \\
                          | samtools view -Sb -@ 2 | samtools sort -o alignment_${sampleId}.sam  
         """
 }
@@ -80,5 +80,4 @@ Channel.fromPath(params.Reference)
       createIndex(ref_file)
       alignReadsToRef(ref_file, createIndex.out.indexes , READS)
 }
-
 
