@@ -1,4 +1,4 @@
-name: wes
+name: Wes
 channels:
   - conda-forge
   - bioconda
