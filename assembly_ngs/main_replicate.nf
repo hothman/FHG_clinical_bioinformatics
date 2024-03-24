@@ -6,7 +6,7 @@
 params.reads = "$projectDir/samplesheet.csv"
 params.Reference = "$projectDir/Ref_genome/Homo_sapiens_GRCh38_dna_chromosome20.fa"
 params.outdir = "$projectDir/outdir/"
-params.knwonSite1 = "$projectDir/knownsites/1000g_gold_standard.indels.filtered.vcf"
+params.knwonSite1 = "$projectDir/knownsites/1000g_gold_standard.indels.filtered.vcf" // knownsites should be .vcf  
 params.knwonSite2 = "$projectDir/knownsites/GCF.38.filtered.renamed.vcf"
 params.cpus = 2
 
@@ -61,8 +61,8 @@ process alignReadsToRef {
        
     	script:
         """
-       	bwa-mem2 mem -t ${params.cpus}  -M ${refGenome} ${R1} ${R2} \
-        		| samtools view -Sb -@ ${params.cpus} \
+       	bwa-mem2 mem -t ${params.cpus}  -M ${refGenome} ${R1} ${R2} \\
+        		| samtools view -Sb -@ ${params.cpus} \\
                         | samtools sort -@ ${params.cpus}  -o ${patient_id}_sor.bam           
         """
 }
@@ -83,15 +83,15 @@ process assignReadGroup {
 
     	script: 
     	"""
-	picard AddOrReplaceReadGroups \
-        		-I ${aligned_bam} \
-                        -O ${patient_id}_sor@RG.bam \
-                        -RGID ${patient_id} \
-                        -RGLB unspec \
-                        -RGPL ILLUMINA \
-                        -RGPU unspec \
-                        -RGSM 20 \
-                        -RGPM unspec \
+	picard AddOrReplaceReadGroups \\
+        		-I ${aligned_bam} \\
+                        -O ${patient_id}_sor@RG.bam \\
+                        -RGID ${patient_id} \\
+                        -RGLB unspec \\
+                        -RGPL ILLUMINA \\
+                        -RGPU unspec \\
+                        -RGSM ${patient_id} \\
+                        -RGPM unspec \\
                         -RGCN unspec
      	"""   
 }
@@ -113,9 +113,9 @@ process markDuplicates {
 
     	script:
     	"""
-    	picard MarkDuplicates --INPUT $sorted_bam \
-        		--OUTPUT ${patient_id}_sor@RG@MD.bam \
-                        --METRICS_FILE ${patient_id}.metrict \
+    	picard MarkDuplicates --INPUT $sorted_bam \\
+        		--OUTPUT ${patient_id}_sor@RG@MD.bam \\
+                        --METRICS_FILE ${patient_id}.metrict \\
                         --TMP_DIR . 
     	"""       
 }
@@ -177,14 +177,14 @@ process IndexKNownSites {
     
     	script:
         """
-        gatk IndexFeatureFile \
-        		--input ${kn_site_File1} \
-        		--output ${kn_site_File1}.idx\
+        gatk IndexFeatureFile \\
+        		--input ${kn_site_File1} \\
+        		--output ${kn_site_File1}.idx \\
         		--tmp-dir . 
         
-       	gatk IndexFeatureFile \
-        		--input ${kn_site_File2} \
-        		--output ${kn_site_File2}.idx\
+       	gatk IndexFeatureFile \\
+        		--input ${kn_site_File2} \\
+        		--output ${kn_site_File2}.idx \\
         		--tmp-dir . 
        	"""
 }
@@ -212,11 +212,11 @@ process BaseRecalibrator {
 
     	script:
         """
-  	gatk BaseRecalibrator	\
-  			--reference ${ref} \
-  	  		--input ${sor_md_bam_file} \
-  	  		--known-sites ${knownsiteFile1} \
-  	  		--known-sites ${knownsiteFile2} \
+  	gatk BaseRecalibrator \\
+  			--reference ${ref} \\
+  	  		--input ${sor_md_bam_file} \\
+  	  		--known-sites ${knownsiteFile1} \\
+  	  		--known-sites ${knownsiteFile2} \\
   	  		--output ${sor_md_bam_file.baseName}.bqsr.table
        """
 }
@@ -237,9 +237,9 @@ process ApplyBQSR {
 
     	script:
         """
-  	gatk ApplyBQSR \
-  			--input ${sor_md_bam_file} \
-  			--bqsr-recal-file ${bqsrTABLE} \
+  	gatk ApplyBQSR \\
+  			--input ${sor_md_bam_file} \\
+  			--bqsr-recal-file ${bqsrTABLE} \\
   			--output ${sor_md_bam_file.baseName}.recal.bam
        	"""
 }  
@@ -281,9 +281,9 @@ process RawHaploCall {
         	path "*raw.HC.vcf" , emit: "vcf_HaplotypeCaller_Raw" // HC : HaplotypeCaller
     	script:
         """
-  	gatk HaplotypeCaller \
-			--reference ${ref} \
-			--input ${BamFile} \
+  	gatk HaplotypeCaller \\
+			--reference ${ref} \\
+			--input ${BamFile} \\
 			--output ${BamFile.baseName}.raw.HC.vcf 
        	"""
 }
@@ -307,14 +307,90 @@ process RecalHaploCall {
 
     	script:
         """
-  	gatk HaplotypeCaller \
-			--reference ${ref} \
-			--input ${ReclBamFile} \
+  	gatk HaplotypeCaller \\
+			--reference ${ref} \\
+			--input ${ReclBamFile} \\
 			--output ${ReclBamFile.baseName}.HC.vcf 
        	"""
 }
 
-// Variant to Table 
+// Create GVCF files
+
+process  CreateGVCF{
+	conda "bioconda::gatk4=4.4"
+	tag "CREATE GVCF with Gatk HaplotypeCaller"
+    	publishDir "${params.outdir}/Mapping/Variants", mode: 'copy'
+
+    	input:
+       		path ref  
+       		path dic
+       		path fai
+       		path ReclBamFile
+       		path ReclBamBai
+       		//tuple val(patient_id), path(R1), path(R2)
+     
+    	output:
+        	path "*.g.vcf" , emit: "g_vcf_Recal"
+        	path "*.phased.bam" , emit: "phased_bam"
+    	script:
+        """
+        gatk HaplotypeCaller \\
+   			--reference ${ref} \\
+    			--input ${ReclBamFile} \\
+    			--output ${ReclBamFile.baseName}.g.vcf \\
+    			--bam-output ${ReclBamFile.baseName}.phased.bam \\
+    			--emit-ref-confidence GVCF 
+   
+       	"""
+}
+
+// Generating Indexes of Gvcf Bam files
+
+process IndexGVCF {
+    	conda "bioconda::samtools=1.19"
+    	tag "CREATING INDEX FOR Recalibrated BAM FILES"
+    	publishDir "${params.outdir}/Indexes/BamFiles", mode: 'copy'
+
+    	input:
+        	path GVCFtoINDEX	// Gvcf file from g_vcf_Recal
+
+    	output:
+        	path "${GVCFtoINDEX}.idx"     	, emit: "IDXVCFiles"
+    
+    	script:
+        """
+        gatk IndexFeatureFile \\
+        		--input ${GVCFtoINDEX} \\
+        		--output ${GVCFtoINDEX}.idx \\
+        		   
+       	"""
+}
+
+// Combining GVCFs 
+
+process  CombineGvcfs{
+	conda "bioconda::gatk4=4.4"
+	tag "COMBINE GVCF files with Gatk HaplotypeCaller"
+    	publishDir "${params.outdir}/Mapping/Variants", mode: 'copy'
+
+    	input:
+       		path ref  
+       		path dic
+       		path fai
+       		path GvcfFiles
+     		path IDXofGvcf
+    	output:
+        	path "Combined.g.vcf" , emit: "Combinedvcf"
+    	script:
+        """
+      	gatk CombineGVCFs \\
+	      		--reference ${ref} \\
+            		--variant ${GvcfFiles.join(' --variant ')} \\
+			--output Combined.g.vcf
+       	"""
+}
+
+// Variant to Table  // to be visiualized with R 
 
 process VarToTable {
 	conda "bioconda::gatk4=4.4"
@@ -330,13 +406,13 @@ process VarToTable {
 		path "${Recalvcf}.table"	
 	script:
 	"""
-	gatk VariantsToTable \
-			--fields CHROM -F POS -F TYPE -GF GT \
-			--variant ${Rawvcf} \
+	gatk VariantsToTable \\
+			--fields CHROM -F POS -F TYPE -GF GT \\
+			--variant ${Rawvcf} \\
 			--output ${Rawvcf}.table
-	gatk VariantsToTable \
-			--fields CHROM -F POS -F TYPE -GF GT \
-			--variant ${Recalvcf} \
+	gatk VariantsToTable \\
+			--fields CHROM -F POS -F TYPE -GF GT \\
+			--variant ${Recalvcf} \\
 			--output ${Recalvcf}.table
 	"""
 }
@@ -355,12 +431,13 @@ conda "bioconda::gatk4=4.4"
 		path "${variants.baseName}.SNP.vcf"
 	script:
 	"""
-	gatk SelectVariants \
-			--variant ${variants} \
-			--select-type-to-include SNP \
+	gatk SelectVariants \\
+			--variant ${variants} \\
+			--select-type-to-include SNP \\
 			--output ${variants.baseName}.SNP.vcf
 	"""
 }
+
 // channels 
 
 // Reference file channel 
@@ -441,6 +518,21 @@ Channel.fromPath(params.knwonSite2, checkIfExists: true)
    	VarToTable 	(	RawHaploCall.out.vcf_HaplotypeCaller_Raw.collectFile(sort: true),
    				RecalHaploCall.out.vcf_HaplotypeCaller_Recal.collectFile(sort: true)	)
    	SnpFilter 	(	RecalHaploCall.out.vcf_HaplotypeCaller_Recal.collectFile(sort: true)	)
+   	
+   	CreateGVCF	(	ref_file,
+				IndexRef.out.dicREF,
+				IndexRef.out.samidxREF,
+				ApplyBQSR.out.recal_bam.collectFile(sort: true),
+				IndexRecalBam.out.IDXRECALBAM.collectFile(sort: true)			)
+													
+
+	IndexGVCF	( 	CreateGVCF.out.g_vcf_Recal.collectFile(sort: true)			)
+				
+	CombineGvcfs	(	ref_file,
+				IndexRef.out.dicREF,
+				IndexRef.out.samidxREF,
+				CreateGVCF.out.g_vcf_Recal.collect(sort: true),
+				IndexGVCF.out.IDXVCFiles.collect(sort: true)				) 
 }       
 
 
